@@ -1,1 +1,1 @@
-# lab-1-semestr-2-
+# lab-semestr-2-
