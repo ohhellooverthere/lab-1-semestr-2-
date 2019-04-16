@@ -1,0 +1,233 @@
+/*Дано список. Занести в нього перші N раціональних чисел, використовуючи діагональний
+ метод Кантора. Реалізувати функції: пошук числа у списку, видалення заданого числа зі списку, сума
+ всіх елементів у списку, додавання наступного числа згідно діагональним методом Кантора.*/
+
+#include "pch.h"
+#include <iostream>
+#include <conio.h>
+using namespace std;
+struct info {
+	float res;
+	int col;//числитель
+	int row;//знаменатель
+};
+struct Node {
+	info Data;
+	Node *next = nullptr;
+};
+struct Nodelist {
+	Node *head = nullptr;
+	void init() {
+		Node *element = new Node;
+		element->Data.col = 1;
+		element->Data.row = 1;
+		element->Data.res = element->Data.col / element->Data.row;
+		head = element;
+		delete element;
+	}
+	void Add( int needed) {
+		int i = 0;
+		int max = 1; 
+		init();
+		//добавление эллементов по кантору
+		Node *el = new Node;
+		el = head;
+		while (i < needed) {
+			if (el->Data.row == max)
+			{
+				max += 1;
+				el->next->Data.row = el->Data.row + 1 ;
+				while (el->next->Data.col != max) {
+					el->next->Data.row = el->Data.row - 1 ;
+					el->next->Data.col= el->Data.col + 1 ;
+					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+					i++;
+					if(i==needed)
+					{
+						break;
+					}
+				}
+				el = el->next;
+			}
+			else if (el->Data.col == max)
+			{
+				max += 1;
+				el->next->Data.col = el->Data.col + 1;
+				while (el->next->Data.row != max) {
+					el->next->Data.col = el->Data.col - 1;
+					el->next->Data.row = el->Data.row + 1;
+					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+					i++;
+					if (i == needed)
+					{
+						break;
+					}
+				}
+				el = el->next;
+			}
+		}
+	}
+	void search(float number, Node *Head)
+	{
+		bool exist = false;
+		Node *cur = new Node;
+		cur = Head;
+		while (cur->next != nullptr)
+		{
+			if (number == cur->next->Data.res)
+			{
+				exist = true;
+				break;
+			}
+			else {
+				cur = cur->next;
+			}
+		}
+		if (exist) {
+			cout << "число есть в списке " << endl;
+		}
+		else {
+			cout << "такого числа нет в списке " << endl;
+		}
+	};
+	float sum(Node *Head)
+	{
+		Node *cur = new Node;
+		cur = Head;
+		float summa;
+		summa = cur->Data.res;
+		while (cur->next != nullptr)
+		{
+			summa += cur->next->Data.res;
+			cur = cur->next;
+		}
+		delete cur;
+		return summa;
+	};
+	void Delete(float number, Node *Head )
+	{
+		bool exist = false;
+		Node *cur = new Node;
+		cur = Head;
+		while (cur->next != nullptr)
+		{
+			if (number == cur->next->Data.res)
+			{
+				exist = true;
+				break;
+			}
+			else {
+				cur = cur->next;
+			}
+		}
+		if (exist) {
+			Node *p = new Node;
+				p = cur->next;
+			cur->next = cur->next->next;// тут теряется указатель, нужно ли что-либо удалять?
+			delete p;   // и вообще это нужно или нет
+		}
+		else {
+			cout << "такого числа нет в списке " << endl;
+		}
+	};
+	void Print(Node *Head) {
+		Node *p = new Node;
+		p = Head;
+		while (p->next != nullptr)
+		{
+			cout<<p->Data.res<<"   ";
+			p = p->next;
+		}
+		delete p;
+	}
+	/*void AddNext(int needed) {
+		needed += 1;
+		int i = 0;
+		int max = 1;
+		init();
+		//добавление эллементов по кантору
+		Node *el = new Node;
+		el = head;
+		while (i < needed) {
+			if (el->Data.row == max)
+			{
+				max += 1;
+				el->next->Data.row = el->Data.row + 1;
+				while (el->next->Data.col != max) {
+					el->next->Data.row = el->Data.row - 1;
+					el->next->Data.col = el->Data.col + 1;
+					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+					i++;
+					if (i == needed)
+					{
+						break;
+					}
+				}
+				el = el->next;
+			}
+			else if (el->Data.col == max)
+			{
+				max += 1;
+				el->next->Data.col = el->Data.col + 1;
+				while (el->next->Data.row != max) {
+					el->next->Data.col = el->Data.col - 1;
+					el->next->Data.row = el->Data.row + 1;
+					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+					i++;
+					if (i == needed)
+					{
+						break;
+					}
+				}
+				el = el->next;
+			}
+		}
+	}*/
+};
+void menu(Nodelist list, int N);
+int main()
+{
+	setlocale(LC_ALL, "rus");
+	int N;
+	cout << "введите количество чисел в списке : " << endl;
+	cin >> N;
+	Nodelist List;
+	List.Add(N);
+	menu(List,N);
+}
+void menu(Nodelist list,int N) {
+	char input;
+	cout << "1: поиск числа в списке " << endl;
+	cout << "2: удаление заданого числа из списка" << endl;
+	cout << "3: сумма всех еллементов в списке" << endl;
+	cout << "4: добавление следующего числа со списка " << endl;
+	cout << "5: вывести на экран" << endl;
+	input = _getch();
+	if (input == '1') {
+		float num;
+		cout << " введите число которое хотите найти в списке :    ";
+		cin >> num;
+		list.search(num, list.head);
+		menu(list, N);
+	}
+	else if (input == '2') {
+		float num;
+		cout << " введите число которое хотите удалить из списка :    " ;
+		cin >> num;
+		list.Delete(num, list.head);	
+		menu(list, N);
+	}
+	else if (input == '3') {
+		cout << list.sum(list.head) << endl;
+		menu(list,N);
+	}
+	else if (input == '4') {
+		N += 1;
+		list.Add(N);
+		menu(list, N);
+	}
+	else if (input == '5') {
+		list.Print(list.head);
+		menu(list, N);
+	}
+}
