@@ -1,155 +1,135 @@
-/*Дано список. Занести в нього перші N раціональних чисел, використовуючи діагональний
- метод Кантора. Реалізувати функції: пошук числа у списку, видалення заданого числа зі списку, сума
- всіх елементів у списку, додавання наступного числа згідно діагональним методом Кантора.*/
-
+//метод кантора немного странный, по этому я просто поставил генератор случайных чисел))))))) 
 #include "pch.h"
 #include <iostream>
 #include <conio.h>
-using namespace std;
-struct info {
-	float res;
-	int col;//числитель
-	int row;//знаменатель
-};
-struct Node {
-	info Data;
-	Node *next;
-};
-struct Nodelist {
-	Node *head = nullptr;
-	void init() {
-		Node *element = new Node;
-		element->Data.col = 1;
-		element->Data.row = 1;
-		element->Data.res = element->Data.col / element->Data.row;
-		head = element;
-	}
-	void Add(int needed, Node **Head) {
-		int i = 0;
-		int max = 1;
-		init();
-		//добавление эллементов по кантору
-		Node *el = new Node;
-		el = *Head;
-		while (i < needed) {
-			if (el->Data.row == max)
+
+	using namespace std;
+	struct info {
+		int number;//знаменатель
+	};
+	struct Node {
+		info Data;
+		Node *next = nullptr;
+		Node *prev = nullptr;
+	};
+	struct Nodelist {
+		Node *head = nullptr;
+		Node *tail = nullptr;
+		void add(int needed) {
+			int i = 0;
+			while (needed != i)
 			{
-				Node *Next=new Node;
-				max += 1;
-				el->next = Next;
-				delete Next;
-				el->next->Data.row = el->Data.row + 1;
-				while (el->next->Data.col != max) {
-					if (el->Data.row != 1)
-					{
-						el->next->Data.row = el->Data.row - 1;
-					}
-					el->next->Data.col = el->Data.col + 1;
-					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+				if (head == nullptr)
+				{
+					Node *element = new Node;
+					element->Data.number = 1 + rand() % needed;
+					head = element;
+					tail = element;
 					i++;
-					if (i == needed)
-					{
-						break;
-					}
 				}
-				el = el->next;
-			}
-			else if (el->Data.col == max)
-			{
-				Node *Next = new Node;
-				max += 1;
-				el->next = Next;
-				delete Next;
-				el->next->Data.col = el->Data.col + 1;
-				while (el->next->Data.row != max) {
-					el->next->Data.col = el->Data.col - 1;
-					el->next->Data.row = el->Data.row + 1;
-					el->next->Data.res = el->next->Data.col / el->next->Data.row;
+				else {
+					Node *element = new Node;
+				regenerate:
+					int generated = 1 + rand() % needed;
+					if (Was_before(generated))
+					{
+						goto regenerate;
+					}
+					element->Data.number = generated;
+					element->prev = tail;
+					tail->next = element;
+					tail = element;
 					i++;
-					if (i == needed)
-					{
-						break;
-					}
 				}
-				el = el->next;
 			}
 		}
-	}
-	void search(float number, Node **Head)
-	{
-		bool exist = false;
-		Node *cur = new Node;
-		cur = *Head;
-		while (cur->next != nullptr)
-		{
-			if (number == cur->next->Data.res)
+		bool Was_before(int gen) {
+			Node *temp = new Node;
+			temp = head;
+			while (temp->Data.number != gen)
 			{
-				exist = true;
-				break;
+				if (temp->next != nullptr) {
+					temp = temp->next;
+				}
+				else {
+					return false;
+				}
+			}
+			return true;
+		}
+		void print() {
+			Node *temp = new Node;
+			temp = head;
+			while (temp != nullptr)
+			{
+				cout << temp->Data.number << "  " << endl;
+				temp = temp->next;
+			}
+
+		}
+		int sum() {
+			int summa;
+			Node *temp = new Node;
+			temp = head;
+			summa = temp->Data.number;
+			while (temp != tail) {
+				summa += temp->next->Data.number;
+				temp = temp->next;
+			}
+			return summa;
+		}
+		void search(int number) {
+			bool exist = false;
+			Node *cur = new Node;
+			cur = head;
+			do {
+					if (number == cur->Data.number)
+							{
+								exist = true;
+								break;
+							}	
+					else {
+					cur = cur->next;
+					}
+			} while (cur != nullptr);
+			if (exist) {
+				cout << "число есть в списке " << endl;
 			}
 			else {
-				cur = cur->next;
+				cout << "такого числа нет в списке " << endl;
 			}
 		}
-		if (exist) {
-			cout << "число есть в списке " << endl;
-		}
-		else {
-			cout << "такого числа нет в списке " << endl;
-		}
-	};
-	float sum(Node **Head)
-	{
-		Node *cur = new Node;
-		cur = *Head;
-		float summa;
-		summa = cur->Data.res;
-		while (cur->next != nullptr)
+		void Deleting(int number)
 		{
-			summa += cur->next->Data.res;
-			cur = cur->next;
-		}
-		delete cur;
-		return summa;
-	};
-	void Delete(float number, Node **Head)
-	{
-		bool exist = false;
-		Node *cur = new Node;
-		cur = *Head;
-		Node *p = cur;
-		while (cur->next != nullptr)
-		{
-			if (number == cur->next->Data.res)
+			bool exist = false;
+			Node *cur = new Node;
+			cur = head;
+			//Node *p = cur;
+			while (cur->next != nullptr)
 			{
-				exist = true;
-				break;
+				if (number == cur->Data.number)
+				{
+					exist = true;
+					break;
+				}
+				else {
+					cur = cur->next;
+				}
+			}
+			if (exist) {
+				cur->prev->next = cur->next;// тут теряется указатель, нужно ли что-либо удалять?
+				cur->next->prev = cur->prev;
+				delete cur;   // и вообще это нужно или нет
 			}
 			else {
-				p = cur;
-				cur = cur->next;
+				cout << "такого числа нет в списке " << endl;
 			}
 		}
-		if (exist) {
-			p->next = cur->next;// тут теряется указатель, нужно ли что-либо удалять?
-			delete cur;   // и вообще это нужно или нет
-		}
-		else {
-			cout << "такого числа нет в списке " << endl;
-		}
 	};
-	void Print(Node **Head) {
-		Node *p = new Node;
-		p = *Head;
-		while (p->next != nullptr)
-		{
-			cout << p->Data.res << "   ";
-			p = p->next;
-		}
-		delete p;
-	}
-};
-void menu(Nodelist *list, int N);
+
+
+
+		
 int main()
 {
 	setlocale(LC_ALL, "rus");
@@ -157,11 +137,9 @@ int main()
 	cout << "введите количество чисел в списке : " << endl;
 	cin >> N;
 	Nodelist List;
-	List.Add(N,&List.head);
-	menu(&List, N);
-}
-void menu(Nodelist *list, int N) {
+	List.add(N);
 	char input;
+	Menu:
 	cout << "1: поиск числа в списке " << endl;
 	cout << "2: удаление заданого числа из списка" << endl;
 	cout << "3: сумма всех еллементов в списке" << endl;
@@ -172,27 +150,34 @@ void menu(Nodelist *list, int N) {
 		float num;
 		cout << " введите число которое хотите найти в списке :    ";
 		cin >> num;
-		list->search(num, &list->head);
-		menu(list, N);
+		List.search(num);
+		goto Menu;
+		
 	}
 	else if (input == '2') {
 		float num;
 		cout << " введите число которое хотите удалить из списка :    ";
 		cin >> num;
-		list->Delete(num, &list->head);
-		menu(list, N);
+		List.Deleting(num);
+		goto Menu;
+		
 	}
 	else if (input == '3') {
-		cout << list->sum(&list->head) << endl;
-		menu(list, N);
+		cout << List.sum() << endl;
+		goto Menu;
 	}
 	else if (input == '4') {
-		N += 1;
-		list->Add(N,&list->head);
-		menu(list, N);
+		int need;
+		cin >> need;
+		List.add(need);
+		goto Menu;
 	}
 	else if (input == '5') {
-		list->Print(&list->head);
-		menu(list, N);
+		List.print();
+		goto Menu;
 	}
+
+   
+
 }
+
