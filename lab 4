@@ -1,0 +1,246 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct tree {
+	char data;
+	tree *left;
+	tree *right;
+};
+
+struct my_stack_node
+{
+	tree *data;
+	my_stack_node *next = nullptr;
+};
+
+struct my_stack
+{
+	my_stack_node *first = nullptr;
+	void add(tree *node)
+	{
+		if (first == nullptr)
+		{
+			first = new my_stack_node();
+			first->data = node;
+		}
+		else 		{
+			my_stack_node *curr = first;
+			while (true)
+			{
+				if (curr->next == nullptr)
+					break;
+				else
+					curr = curr->next;
+			}
+			curr->next = new my_stack_node();
+			curr->next->data = node;
+		}
+	}
+	void remove()
+	{
+		if (first == nullptr)
+			return;
+		my_stack_node *curr = first;
+		if (first->next == nullptr)
+		{
+			first = nullptr;
+			return;
+		}
+
+		while (true)
+		{
+			if (curr->next->next == nullptr) 
+			{
+				curr->next = nullptr;
+				return;
+			}
+			else
+				curr = curr->next;
+		}
+	}
+	tree*top()
+	{
+		if (first == nullptr)
+			return nullptr;
+		my_stack_node *curr = first;
+		while (true)
+		{
+			if (curr->next == nullptr)
+				return curr->data;
+			curr = curr->next;
+		}
+	}
+};
+
+bool is_operator(char c)
+{
+	if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '^')
+		return true;
+	return false;
+}
+
+void print(tree *tmp, string *value)
+{
+	if (tmp)
+	{
+		print(tmp->left, value);
+		value->push_back(tmp->data);
+		cout << tmp->data << " ";
+		print(tmp->right, value);
+	}
+}
+
+double answer(string tmp)
+{
+	double *arr = new double[tmp.length()];
+	for (size_t i = 0; i < tmp.length(); i++)
+		arr[i] = 0;
+	int k = 0;
+	string new_str;
+	for (size_t i = 0; i < tmp.length(); i++)
+	{
+		if ((tmp[i] > 96 && tmp[i] < 123) || (tmp[i] > 66 && tmp[i] < 91))
+		{
+			cout << tmp[i] << " = ";
+			cin >> tmp[i];
+		}
+		if (tmp[i] == '+' || tmp[i] == '-')
+			new_str.push_back(tmp[i]);
+		else if ((tmp[i] > 47 && tmp[i] < 58) && (i + 1 >= tmp.length() || (tmp[i + 1] != '*'&&tmp[i + 1] != '/'&&tmp[i + 1] != '%'&&tmp[i + 1] != '^')))
+		{
+			arr[k] = atoi(&tmp[i]);
+			k++;
+		}
+		else
+		{
+			if ((tmp[i+1] > 96 && tmp[i+1] < 123) || (tmp[i+1] > 66 && tmp[i+1] < 91))
+			{
+				cout << tmp[i+1] << " = ";
+				cin >> tmp[i+1];
+			}
+			switch (tmp[i])
+			{
+			case '*':
+				if (k >= 1 && i >= 2 && ((tmp[i - 2] == '*' || tmp[i - 2] == '/' || tmp[i - 2] == '%' || tmp[i - 2] == '^')))  
+					arr[k - 1] = arr[k - 1] * atoi(&tmp[i + 1]);
+				else
+				{
+					arr[k] = atoi(&tmp[i - 1]) * atoi(&tmp[i + 1]);
+					k++;
+				}
+				i++;
+				break;
+			case '/':
+				if (k >= 1 && i >= 2 && ((tmp[i - 2] == '*' || tmp[i - 2] == '/' || tmp[i - 2] == '%' || tmp[i - 2] == '^')))
+					arr[k - 1] = (double)arr[k - 1] / atoi(&tmp[i + 1]);
+				else
+				{
+					arr[k] = (double)atoi(&tmp[i - 1]) / atoi(&tmp[i + 1]);
+					k++;
+				}
+				i++;
+				break;
+			case '^':
+				if (k >= 1 && i >= 2 && ((tmp[i - 2] == '*' || tmp[i - 2] == '/' || tmp[i - 2] == '%' || tmp[i - 2] == '^')))
+					arr[k - 1] = pow(arr[k - 1], atoi(&tmp[i + 1]));
+				else
+				{
+					arr[k] = pow(atoi(&tmp[i - 1]), atoi(&tmp[i + 1]));
+					k++;
+				}
+				i++;
+				break;
+			case '%':
+				if (k >= 1 && i >= 2 && ((tmp[i - 2] == '*' || tmp[i - 2] == '/' || tmp[i - 2] == '%' || tmp[i - 2] == '^')))
+					arr[k - 1] = (int)arr[k - 1] % atoi(&tmp[i + 1]);
+				else
+				{
+					arr[k] = atoi(&tmp[i - 1]) % atoi(&tmp[i + 1]);
+					k++;
+				}
+				i++;
+				break;
+			}
+		}
+	}
+	int i = 0;
+	for (; i < new_str.length(); i++)
+	{
+		switch (new_str[i])
+		{
+		case'-':
+			arr[i + 1] = arr[i] - arr[i + 1];
+			break;
+		case'+':
+			arr[i + 1] = arr[i] + arr[i + 1];
+			break;
+		}
+	}
+	return arr[i];
+}
+
+tree *new_node(int tmp)
+{
+	tree *tmp_node = new tree;
+	tmp_node->left = tmp_node->right = NULL;
+	tmp_node->data = tmp;
+	return tmp_node;
+}
+
+tree *construct(string str)
+{
+	my_stack obj;
+	tree *tmp, *tmp1, *tmp2;
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (!is_operator(str[i]))
+		{
+			tmp = new_node(str[i]);
+			obj.add(tmp);
+		}
+		else
+		{
+			tmp = new_node(str[i]);
+			tmp1 = obj.top();
+			obj.remove();
+			tmp2 = obj.top();
+			obj.remove();
+			tmp->right = tmp1;
+			tmp->left = tmp2;
+			obj.add(tmp);
+		}
+	}
+
+	tmp = obj.top();
+	obj.remove();
+
+	return tmp;
+}
+
+int main()
+{
+	tree *node;
+	string str, value;
+	getline(cin, str);
+    for (size_t i = 0, z = 0; i < str.length(); i++)
+	{
+		if ((str[i] > 96 && str[i] < 123) || (str[i] > 66 && str[i] < 91) || (str[i] > 47 && str[i] < 58))
+			z++;
+		else
+			z--;
+        if (z < 1) //death:)
+		{
+			cout << "error input\n";
+			system("pause");
+			exit(0);
+		}
+	}
+	node = construct(str);
+	print(node, &value);
+	cout << endl;
+	cout << "value = " << answer(value) << endl;
+	system("pause");
+	return 0;
+}
